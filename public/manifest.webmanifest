@@ -1,0 +1,13 @@
+{
+  "name": "Flomo 整理器",
+  "short_name": "Flomo整理",
+  "description": "将表格自动整理成可读的 Flomo 备忘录",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f1e9",
+  "theme_color": "#15382f",
+  "icons": [
+    { "src": "./favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
