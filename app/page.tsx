@@ -5,11 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 type Item = { id: string; text: string; status: "idle" | "sending" | "sent" | "failed"; error?: string };
 type Format = "inline" | "lines" | "markdown";
 
-const EXAMPLE = `| 维度 | 焦虑无法承受错误 | 脆弱型NPD |
-| --- | --- | --- |
-| **错误归谁** | 归外部环境（鞋、路、天气） | 归你（你不听我的）或归她（我倒霉） |
-| **第一句话** | “摔哪了？疼不疼？能走吗？” | “我说了吧 / 给我试错 / 不然我倒霉” |`;
-
 function clean(value: string) {
   return value.trim().replace(/^\*\*([\s\S]*?)\*\*$/, "$1").replace(/<br\s*\/?>/gi, "\n");
 }
@@ -41,23 +36,23 @@ function parseTable(raw: string) {
 }
 
 function makeText(headers: string[], row: string[], format: Format) {
-  const title = row[0] || "未命名";
-  const fields = headers.slice(1).map((header, index) => ({ header: header || `第 ${index + 2} 列`, value: row[index + 1] || "—" }));
-  if (format === "lines") return [title, ...fields.map(({ header, value }) => `${header}：${value}`)].join("\n");
-  if (format === "markdown") return [`**${title}**`, ...fields.map(({ header, value }) => `- **${header}**：${value}`)].join("\n");
-  return [title, ...fields.map(({ header, value }) => `${header}：${value}`)].join("｜");
+  const title = row[0] || "鏈懡鍚?;
+  const fields = headers.slice(1).map((header, index) => ({ header: header || `绗?${index + 2} 鍒梎, value: row[index + 1] || "鈥? }));
+  if (format === "lines") return [title, ...fields.map(({ header, value }) => `${header}锛?{value}`)].join("\n");
+  if (format === "markdown") return [`**${title}**`, ...fields.map(({ header, value }) => `- **${header}**锛?{value}`)].join("\n");
+  return [title, ...fields.map(({ header, value }) => `${header}锛?{value}`)].join("锝?);
 }
 
 async function postToFlomo(endpoint: string, content: string) {
   const body = new URLSearchParams({ content });
   const response = await fetch(endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" }, body });
-  if (!response.ok) throw new Error(`接口返回 ${response.status}`);
+  if (!response.ok) throw new Error(`鎺ュ彛杩斿洖 ${response.status}`);
   const data = await response.json().catch(() => null);
-  if (data && data.code != null && String(data.code) !== "0") throw new Error(data.message || data.msg || "Flomo 拒绝了请求");
+  if (data && data.code != null && String(data.code) !== "0") throw new Error(data.message || data.msg || "Flomo 鎷掔粷浜嗚姹?);
 }
 
 export default function Home() {
-  const [raw, setRaw] = useState(EXAMPLE);
+  const [raw, setRaw] = useState("");
   const [endpoint, setEndpoint] = useState("");
   const [format, setFormat] = useState<Format>("inline");
   const [items, setItems] = useState<Item[]>([]);
@@ -85,19 +80,19 @@ export default function Home() {
   }
 
   async function send(targets = items.filter((item) => item.status !== "sent")) {
-    if (!endpoint.trim()) { setMessage("请先填入 Flomo API 地址"); return; }
-    if (!targets.length) { setMessage("没有需要发送的内容"); return; }
+    if (!endpoint.trim()) { setMessage("璇峰厛濉叆 Flomo API 鍦板潃"); return; }
+    if (!targets.length) { setMessage("娌℃湁闇€瑕佸彂閫佺殑鍐呭"); return; }
     setSending(true); setMessage("");
     const content = targets.map((item, index) => `${index + 1}. ${item.text}`).join("\n\n");
     setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "sending" } : item));
     try {
       await postToFlomo(endpoint, content);
       setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "sent", error: undefined } : item));
-      setMessage(`已将 ${targets.length} 行编号后合并保存为 1 条 Flomo`);
+      setMessage(`宸插皢 ${targets.length} 琛岀紪鍙峰悗鍚堝苟淇濆瓨涓?1 鏉?Flomo`);
     } catch (error) {
-      const reason = error instanceof Error ? error.message : "发送失败";
+      const reason = error instanceof Error ? error.message : "鍙戦€佸け璐?;
       setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "failed", error: reason } : item));
-      setMessage(`发送失败：${reason}`);
+      setMessage(`鍙戦€佸け璐ワ細${reason}`);
     }
     setSending(false);
   }
@@ -106,19 +101,20 @@ export default function Home() {
 
   return (
     <main>
-      <header className="topbar"><div className="brand"><span className="mark">F</span><div><strong>Flomo 整理器</strong><small>表格一粘，备忘录就绪</small></div></div><span className="local-pill">● 密钥仅存本机</span></header>
-      <section className="hero"><p className="eyebrow">TABLE → ONE MEMO</p><h1>把整张表格，<br/><em>合成一条 Flomo。</em></h1><p>粘贴 Markdown 或 Excel 表格，自动按行编号并合并。发送前，每一行都可以检查和修改。</p></section>
+      <header className="topbar"><div className="brand"><span className="mark">F</span><div><strong>Flomo 鏁寸悊鍣?/strong><small>琛ㄦ牸涓€绮橈紝澶囧繕褰曞氨缁?/small></div></div><span className="local-pill">鈼?瀵嗛挜浠呭瓨鏈満</span></header>
+      <section className="hero"><p className="eyebrow">TABLE 鈫?ONE MEMO</p><h1>鎶婃暣寮犺〃鏍硷紝<br/><em>鍚堟垚涓€鏉?Flomo銆?/em></h1><p>绮樿创 Markdown 鎴?Excel 琛ㄦ牸锛岃嚜鍔ㄦ寜琛岀紪鍙峰苟鍚堝苟銆傚彂閫佸墠锛屾瘡涓€琛岄兘鍙互妫€鏌ュ拰淇敼銆?/p></section>
 
       <div className="workspace">
-        <section className="card input-card"><div className="section-title"><span>01</span><div><h2>粘贴表格</h2><p>支持 Markdown 竖线与 Excel / 飞书制表符</p></div><button className="text-button" onClick={() => setRaw(EXAMPLE)}>填入示例</button></div><textarea aria-label="粘贴表格内容" value={raw} onChange={(e) => setRaw(e.target.value)} placeholder="在这里粘贴表格…" /><div className="input-meta"><span>识别到 <b>{parsed.headers.length}</b> 列 · <b>{parsed.rows.length}</b> 条</span><button onClick={() => setRaw("")} className="clear">清空</button></div></section>
+        <section className="card input-card"><div className="section-title"><span>01</span><div><h2>绮樿创琛ㄦ牸</h2><p>鏀寔 Markdown 绔栫嚎涓?Excel / 椋炰功鍒惰〃绗?/p></div></div><textarea aria-label="绮樿创琛ㄦ牸鍐呭" value={raw} onChange={(e) => setRaw(e.target.value)} placeholder="鍦ㄨ繖閲岀矘璐翠綘鐨勮〃鏍尖€? /><div className="input-meta"><span>璇嗗埆鍒?<b>{parsed.headers.length}</b> 鍒?路 <b>{parsed.rows.length}</b> 鏉?/span><button onClick={() => setRaw("")} className="clear">娓呯┖</button></div></section>
 
-        <section className="card settings-card"><div className="section-title"><span>02</span><div><h2>设置发送</h2><p>整张表格将编号并合并为 1 条 Flomo</p></div></div><label className="field"><span>Flomo API 地址</span><input type="password" value={endpoint} onChange={(e) => saveEndpoint(e.target.value)} placeholder="https://flomoapp.com/iwh/...”" autoComplete="off"/><small>完整 API 地址将保存在浏览器 localStorage，项目中不包含任何密钥。</small></label><div className="choice-grid"><fieldset><legend>每行内容格式</legend>{([["inline", "单行紧凑"], ["lines", "分行易读"], ["markdown", "Markdown"]] as const).map(([value,label]) => <label key={value}><input type="radio" name="format" checked={format === value} onChange={() => setFormat(value)}/><span>{label}</span></label>)}</fieldset></div></section>
+        <section className="card settings-card"><div className="section-title"><span>02</span><div><h2>璁剧疆鍙戦€?/h2><p>鏁村紶琛ㄦ牸灏嗙紪鍙峰苟鍚堝苟涓?1 鏉?Flomo</p></div></div><label className="field"><span>Flomo API 鍦板潃</span><input type="password" value={endpoint} onChange={(e) => saveEndpoint(e.target.value)} placeholder="https://flomoapp.com/iwh/...鈥? autoComplete="off"/><small>瀹屾暣 API 鍦板潃灏嗕繚瀛樺湪娴忚鍣?localStorage锛岄」鐩腑涓嶅寘鍚换浣曞瘑閽ャ€?/small></label><div className="choice-grid"><fieldset><legend>姣忚鍐呭鏍煎紡</legend>{([["inline", "鍗曡绱у噾"], ["lines", "鍒嗚鏄撹"], ["markdown", "Markdown"]] as const).map(([value,label]) => <label key={value}><input type="radio" name="format" checked={format === value} onChange={() => setFormat(value)}/><span>{label}</span></label>)}</fieldset></div></section>
       </div>
 
-      <section className="preview"><div className="preview-head"><div><span className="step">03</span><h2>预览与编辑</h2></div><span>{items.length} 行 · 合并为 1 条</span></div>{parsed.headers.length > 0 && <div className="headers"><b>原表头</b>{parsed.headers.map((header, i) => <span key={`${header}-${i}`}>{header || `第 ${i + 1} 列`}</span>)}</div>}<div className="memo-list">{items.length ? items.map((item, index) => <article className={`memo ${item.status}`} key={item.id}><div className="memo-number">{index + 1}.</div><textarea aria-label={`编辑第 ${index + 1} 行内容`} value={item.text} onChange={(e) => updateItem(item.id, e.target.value)}/><div className="status">{item.status === "sent" ? "✓ 已发送" : item.status === "sending" ? "发送中…" : item.status === "failed" ? `! ${item.error}` : "可编辑"}</div></article>) : <div className="empty">粘贴表格后，整理好的内容会出现在这里。</div>}</div></section>
+      <section className="preview"><div className="preview-head"><div><span className="step">03</span><h2>棰勮涓庣紪杈?/h2></div><span>{items.length} 琛?路 鍚堝苟涓?1 鏉?/span></div>{parsed.headers.length > 0 && <div className="headers"><b>鍘熻〃澶?/b>{parsed.headers.map((header, i) => <span key={`${header}-${i}`}>{header || `绗?${i + 1} 鍒梎}</span>)}</div>}<div className="memo-list">{items.length ? items.map((item, index) => <article className={`memo ${item.status}`} key={item.id}><div className="memo-number">{index + 1}.</div><textarea aria-label={`缂栬緫绗?${index + 1} 琛屽唴瀹筦} value={item.text} onChange={(e) => updateItem(item.id, e.target.value)}/><div className="status">{item.status === "sent" ? "鉁?宸插彂閫? : item.status === "sending" ? "鍙戦€佷腑鈥? : item.status === "failed" ? `! ${item.error}` : "鍙紪杈?}</div></article>) : <div className="empty">绮樿创琛ㄦ牸鍚庯紝鏁寸悊濂界殑鍐呭浼氬嚭鐜板湪杩欓噷銆?/div>}</div></section>
 
-      <div className="sendbar"><div><strong>准备将 {items.filter(i => i.status !== "sent").length} 行合并为 1 条 Flomo</strong><span>{message || "发送时会自动加上 1. 2. 3. 编号"}</span></div><div className="send-actions">{failed.length > 0 && <button className="retry" disabled={sending} onClick={() => send(failed)}>重试发送</button>}<button className="send" disabled={sending || !items.length} onClick={() => send()}>{sending ? "正在发送…" : "合并发送到 Flomo ↗"}</button></div></div>
-      <footer>你的表格内容只在本页处理 · 可离线打开 · 可添加到主屏幕</footer>
+      <div className="sendbar"><div><strong>鍑嗗灏?{items.filter(i => i.status !== "sent").length} 琛屽悎骞朵负 1 鏉?Flomo</strong><span>{message || "鍙戦€佹椂浼氳嚜鍔ㄥ姞涓?1. 2. 3. 缂栧彿"}</span></div><div className="send-actions">{failed.length > 0 && <button className="retry" disabled={sending} onClick={() => send(failed)}>閲嶈瘯鍙戦€?/button>}<button className="send" disabled={sending || !items.length} onClick={() => send()}>{sending ? "姝ｅ湪鍙戦€佲€? : "鍚堝苟鍙戦€佸埌 Flomo 鈫?}</button></div></div>
+      <footer>浣犵殑琛ㄦ牸鍐呭鍙湪鏈〉澶勭悊 路 鍙绾挎墦寮€ 路 鍙坊鍔犲埌涓诲睆骞?/footer>
     </main>
   );
 }
+
