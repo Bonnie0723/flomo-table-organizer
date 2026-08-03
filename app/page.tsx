@@ -60,7 +60,6 @@ export default function Home() {
   const [raw, setRaw] = useState(EXAMPLE);
   const [endpoint, setEndpoint] = useState("");
   const [format, setFormat] = useState<Format>("inline");
-  const [mode, setMode] = useState<"separate" | "merged">("separate");
   const [items, setItems] = useState<Item[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -89,32 +88,16 @@ export default function Home() {
     if (!endpoint.trim()) { setMessage("请先填入 Flomo API 地址"); return; }
     if (!targets.length) { setMessage("没有需要发送的内容"); return; }
     setSending(true); setMessage("");
-    if (mode === "merged") {
-      const content = targets.map((item) => item.text).join("\n\n");
-      setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "sending" } : item));
-      try {
-        await postToFlomo(endpoint, content);
-        setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "sent", error: undefined } : item));
-        setMessage(`已合并保存 ${targets.length} 条内容`);
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : "发送失败";
-        setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "failed", error: reason } : item));
-        setMessage(`发送失败：${reason}`);
-      }
-    } else {
-      let success = 0;
-      for (const target of targets) {
-        setItems((cur) => cur.map((item) => item.id === target.id ? { ...item, status: "sending" } : item));
-        try {
-          await postToFlomo(endpoint, target.text);
-          success++;
-          setItems((cur) => cur.map((item) => item.id === target.id ? { ...item, status: "sent", error: undefined } : item));
-        } catch (error) {
-          const reason = error instanceof Error ? error.message : "发送失败";
-          setItems((cur) => cur.map((item) => item.id === target.id ? { ...item, status: "failed", error: reason } : item));
-        }
-      }
-      setMessage(`发送完成：成功 ${success} 条，失败 ${targets.length - success} 条`);
+    const content = targets.map((item, index) => `${index + 1}. ${item.text}`).join("\n\n");
+    setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "sending" } : item));
+    try {
+      await postToFlomo(endpoint, content);
+      setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "sent", error: undefined } : item));
+      setMessage(`已将 ${targets.length} 行编号后合并保存为 1 条 Flomo`);
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : "发送失败";
+      setItems((cur) => cur.map((item) => targets.some((t) => t.id === item.id) ? { ...item, status: "failed", error: reason } : item));
+      setMessage(`发送失败：${reason}`);
     }
     setSending(false);
   }
@@ -124,17 +107,17 @@ export default function Home() {
   return (
     <main>
       <header className="topbar"><div className="brand"><span className="mark">F</span><div><strong>Flomo 整理器</strong><small>表格一粘，备忘录就绪</small></div></div><span className="local-pill">● 密钥仅存本机</span></header>
-      <section className="hero"><p className="eyebrow">TABLE → MEMO</p><h1>把乱掉的表格，<br/><em>变成好读的 Flomo。</em></h1><p>粘贴 Markdown 或 Excel 表格，自动拆成一行一条。发送前，你始终可以检查和修改。</p></section>
+      <section className="hero"><p className="eyebrow">TABLE → ONE MEMO</p><h1>把整张表格，<br/><em>合成一条 Flomo。</em></h1><p>粘贴 Markdown 或 Excel 表格，自动按行编号并合并。发送前，每一行都可以检查和修改。</p></section>
 
       <div className="workspace">
         <section className="card input-card"><div className="section-title"><span>01</span><div><h2>粘贴表格</h2><p>支持 Markdown 竖线与 Excel / 飞书制表符</p></div><button className="text-button" onClick={() => setRaw(EXAMPLE)}>填入示例</button></div><textarea aria-label="粘贴表格内容" value={raw} onChange={(e) => setRaw(e.target.value)} placeholder="在这里粘贴表格…" /><div className="input-meta"><span>识别到 <b>{parsed.headers.length}</b> 列 · <b>{parsed.rows.length}</b> 条</span><button onClick={() => setRaw("")} className="clear">清空</button></div></section>
 
-        <section className="card settings-card"><div className="section-title"><span>02</span><div><h2>设置发送</h2><p>接口地址不会离开这台设备</p></div></div><label className="field"><span>Flomo API 地址</span><input type="password" value={endpoint} onChange={(e) => saveEndpoint(e.target.value)} placeholder="https://flomoapp.com/iwh/...”" autoComplete="off"/><small>完整 API 地址将保存在浏览器 localStorage，项目中不包含任何密钥。</small></label><div className="choice-grid"><fieldset><legend>内容格式</legend>{([["inline", "单行紧凑"], ["lines", "分行易读"], ["markdown", "Markdown"]] as const).map(([value,label]) => <label key={value}><input type="radio" name="format" checked={format === value} onChange={() => setFormat(value)}/><span>{label}</span></label>)}</fieldset><fieldset><legend>发送方式</legend>{([["separate", "逐条发送"], ["merged", "合并发送"]] as const).map(([value,label]) => <label key={value}><input type="radio" name="mode" checked={mode === value} onChange={() => setMode(value)}/><span>{label}</span></label>)}</fieldset></div></section>
+        <section className="card settings-card"><div className="section-title"><span>02</span><div><h2>设置发送</h2><p>整张表格将编号并合并为 1 条 Flomo</p></div></div><label className="field"><span>Flomo API 地址</span><input type="password" value={endpoint} onChange={(e) => saveEndpoint(e.target.value)} placeholder="https://flomoapp.com/iwh/...”" autoComplete="off"/><small>完整 API 地址将保存在浏览器 localStorage，项目中不包含任何密钥。</small></label><div className="choice-grid"><fieldset><legend>每行内容格式</legend>{([["inline", "单行紧凑"], ["lines", "分行易读"], ["markdown", "Markdown"]] as const).map(([value,label]) => <label key={value}><input type="radio" name="format" checked={format === value} onChange={() => setFormat(value)}/><span>{label}</span></label>)}</fieldset></div></section>
       </div>
 
-      <section className="preview"><div className="preview-head"><div><span className="step">03</span><h2>预览与编辑</h2></div><span>{items.length} 条备忘录</span></div>{parsed.headers.length > 0 && <div className="headers"><b>原表头</b>{parsed.headers.map((header, i) => <span key={`${header}-${i}`}>{header || `第 ${i + 1} 列`}</span>)}</div>}<div className="memo-list">{items.length ? items.map((item, index) => <article className={`memo ${item.status}`} key={item.id}><div className="memo-number">{String(index + 1).padStart(2,"0")}</div><textarea aria-label={`编辑第 ${index + 1} 条备忘录`} value={item.text} onChange={(e) => updateItem(item.id, e.target.value)}/><div className="status">{item.status === "sent" ? "✓ 已发送" : item.status === "sending" ? "发送中…" : item.status === "failed" ? `! ${item.error}` : "可编辑"}</div></article>) : <div className="empty">粘贴表格后，整理好的内容会出现在这里。</div>}</div></section>
+      <section className="preview"><div className="preview-head"><div><span className="step">03</span><h2>预览与编辑</h2></div><span>{items.length} 行 · 合并为 1 条</span></div>{parsed.headers.length > 0 && <div className="headers"><b>原表头</b>{parsed.headers.map((header, i) => <span key={`${header}-${i}`}>{header || `第 ${i + 1} 列`}</span>)}</div>}<div className="memo-list">{items.length ? items.map((item, index) => <article className={`memo ${item.status}`} key={item.id}><div className="memo-number">{index + 1}.</div><textarea aria-label={`编辑第 ${index + 1} 行内容`} value={item.text} onChange={(e) => updateItem(item.id, e.target.value)}/><div className="status">{item.status === "sent" ? "✓ 已发送" : item.status === "sending" ? "发送中…" : item.status === "failed" ? `! ${item.error}` : "可编辑"}</div></article>) : <div className="empty">粘贴表格后，整理好的内容会出现在这里。</div>}</div></section>
 
-      <div className="sendbar"><div><strong>{mode === "separate" ? `准备逐条发送 ${items.filter(i => i.status !== "sent").length} 条` : `准备合并 ${items.filter(i => i.status !== "sent").length} 条内容`}</strong><span>{message || "发送前请再检查一遍内容"}</span></div><div className="send-actions">{failed.length > 0 && <button className="retry" disabled={sending} onClick={() => send(failed)}>重试失败项</button>}<button className="send" disabled={sending || !items.length} onClick={() => send()}>{sending ? "正在发送…" : "发送到 Flomo ↗"}</button></div></div>
+      <div className="sendbar"><div><strong>准备将 {items.filter(i => i.status !== "sent").length} 行合并为 1 条 Flomo</strong><span>{message || "发送时会自动加上 1. 2. 3. 编号"}</span></div><div className="send-actions">{failed.length > 0 && <button className="retry" disabled={sending} onClick={() => send(failed)}>重试发送</button>}<button className="send" disabled={sending || !items.length} onClick={() => send()}>{sending ? "正在发送…" : "合并发送到 Flomo ↗"}</button></div></div>
       <footer>你的表格内容只在本页处理 · 可离线打开 · 可添加到主屏幕</footer>
     </main>
   );
